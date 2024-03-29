@@ -17,6 +17,9 @@ def main():
         if path_type == "echo":
             random_msg = path_type.split("/")[2]
             conn.sendall(f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\n{random_msg}".encode())
+        else:
+            if path[0] == "/":
+                conn.sendall("HTTP/1.1 200 OK\r\n\r\n".encode())
         conn.sendall("HTTP/1.1 404 Not Found\r\n\r\n".encode())
     server_socket.close()
 

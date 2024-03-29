@@ -13,9 +13,12 @@ def main():
         data = conn.recv(1024).decode()
         print(f"Receive data: {data}")
         path = data.split()[1]
-        path_type = path.split("/")[1]
+        path_elements = path.split("/")
+        path_type = path_elements[1]
         if path_type == "echo":
-            random_msg = path_type.split("/")[2]
+            random_msg = ""
+            for i in range(2, len(path_elements)):
+                random_msg += path_elements[i]
             conn.sendall(f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\n{random_msg}".encode())
         else:
             if path == "/":

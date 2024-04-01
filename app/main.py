@@ -19,7 +19,10 @@ def main():
             random_msg = ""
             for i in range(2, len(path_elements)):
                 random_msg += path_elements[i]
-            conn.sendall(f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\n{random_msg}".encode())
+                if i < len(path_elements) - 1:
+                    random_msg += "/"
+            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(random_msg)}\r\n\r\n{random_msg}"
+            conn.sendall(response.encode())
         else:
             if path == "/":
                 conn.sendall("HTTP/1.1 200 OK\r\n\r\n".encode())

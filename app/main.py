@@ -1,5 +1,5 @@
 import socket
-from http_utils import HttpRequest
+from .http_utils import HttpRequest
 import threading
 
 def main():

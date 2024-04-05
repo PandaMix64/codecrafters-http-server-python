@@ -1,9 +1,11 @@
+from pathlib import Path
 import socket
 import os
+import sys
 from .http_utils import HttpRequest, HttpResponse
 import threading
 
-def main():
+def main(dir = None):
     print("Logs from your program will appear here!")
 
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
@@ -12,12 +14,12 @@ def main():
         while True:
             conn, addr = server_socket.accept() # wait for client
             print(f"Connected to: {addr}")
-            client_thread = threading.Thread(target=process_client, args=[conn])
+            client_thread = threading.Thread(target=process_client, args=[conn, dir])
             client_thread.start()
     finally:
         server_socket.close()
 
-def process_client(conn):
+def process_client(conn:socket.socket, dir = None):
     data = conn.recv(1024).decode()
     print(f"Receive data: {data}")
     path = data.split()[1]
@@ -48,11 +50,21 @@ def process_client(conn):
                 if not path_elements[i] == "/":
                     local_path += "/"
                 local_path += path_elements[i]
+            file = None
+            if dir:
+                local_path = local_path[1:]
+                file_path = Path(dir + local_path)
+                if file_path.is_file():
+                    file = file_path
             try:
-                with open(local_path, "r") as file:
-                    print("success")
-                    content = file.read()
+                if file:
+                    content = file.read_text()
                     conn.sendall(response.process_get(content, "application/octet-stream").encode())
+                else:
+                    with open(local_path, "r") as file:
+                        print("success")
+                        content = file.read()
+                        conn.sendall(response.process_get(content, "application/octet-stream").encode())
             except (FileNotFoundError, IsADirectoryError):
                 print("failed")
                 conn.sendall(response.not_found().encode())
@@ -63,4 +75,9 @@ def process_client(conn):
                 conn.sendall(response.not_found().encode())
 
 if __name__ == "__main__":
-    main()
+    args = sys.argv
+    dir = None
+    for i in range(len(args)):
+        if args[i] == "--directory":
+            dir = args[i + 1] # Getting next value wich should be the directory
+    main(dir)

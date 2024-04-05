@@ -44,16 +44,17 @@ def process_client(conn):
             if path_elements[2] == "":
                 path_elements[2] = "/"
             local_path = "."
-            print("yeah")
             for i in range(2, len(path_elements)):
                 if not path_elements[i] == "/":
                     local_path += "/"
                 local_path += path_elements[i]
             try:
                 with open(local_path, "r") as file:
+                    print("success")
                     content = file.read()
                     conn.sendall(response.process_get(content, "application/octet-stream").encode())
             except (FileNotFoundError, IsADirectoryError):
+                print("failed")
                 conn.sendall(response.not_found().encode())
         case _:
             if path == "/":

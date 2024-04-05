@@ -42,6 +42,9 @@ class HttpResponse:
     def process_post(self, content = {}, content_type:str = "application/json",status:int = 201, msg:str = "Created"):
         self.response = f"{self.request.protocol} {status} {msg}\r\nContent-Type: {content_type}\r\n\r\n{content}"
         return self.response
+    
+    def not_found(self):
+        return "HTTP/1.1 404 Not Found\r\n\r\n"
 
     def __str__(self) -> str:
         if self.response == "":

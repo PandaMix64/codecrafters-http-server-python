@@ -51,14 +51,14 @@ def process_client(conn):
             try:
                 with open(local_path, "r") as file:
                     content = file.read()
-                    conn.sendall(response.process_get(content).encode())
+                    conn.sendall(response.process_get(content, "application/octet-stream").encode())
             except (FileNotFoundError, IsADirectoryError):
-                print(local_path, "Not found")
+                conn.sendall(response.not_found().encode())
         case _:
             if path == "/":
                 conn.sendall("HTTP/1.1 200 OK\r\n\r\n".encode())
             else:
-                conn.sendall("HTTP/1.1 404 Not Found\r\n\r\n".encode())
+                conn.sendall(response.not_found().encode())
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 import socket
 import os
-from http_utils import HttpRequest, HttpResponse
+from .http_utils import HttpRequest, HttpResponse
 import threading
 
 def main():

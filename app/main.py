@@ -1,9 +1,9 @@
 import socket
-from .http_utils import HttpRequest
+import os
+from http_utils import HttpRequest, HttpResponse
 import threading
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
@@ -26,7 +26,7 @@ def process_client(conn):
     
     #Parsing string to object
     http_request = HttpRequest(data)
-    
+    response = HttpResponse(http_request)
     match path_type:
         case "echo":
             msg = ""
@@ -34,12 +34,26 @@ def process_client(conn):
                 msg += path_elements[i]
                 if i < len(path_elements) - 1:
                     msg += "/"
-            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(msg)}\r\n\r\n{msg}"
-            conn.sendall(response.encode())
+            conn.sendall(response.process_get(msg).encode())
         case "user-agent":
             msg = http_request.headers[path_type]
-            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(msg)}\r\n\r\n{msg}"
-            conn.sendall(response.encode())
+            conn.sendall(response.process_get(msg).encode())
+        case "files":
+            if len(path_elements) <= 2:
+                path_elements.append("/")
+            if path_elements[2] == "":
+                path_elements[2] = "/"
+            local_path = "."
+            for i in range(2, len(path_elements)):
+                if not path_elements[i] == "/":
+                    local_path += "/"
+                local_path += path_elements[i]
+            try:
+                with open(local_path, "r") as file:
+                    content = file.read()
+                    conn.sendall(response.process_get(content).encode())
+            except (FileNotFoundError, IsADirectoryError):
+                print(local_path, "Not found")
         case _:
             if path == "/":
                 conn.sendall("HTTP/1.1 200 OK\r\n\r\n".encode())

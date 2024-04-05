@@ -44,7 +44,7 @@ class HttpResponse:
         return self.response
     
     def not_found(self):
-        return "HTTP/1.1 404 Not Found\r\n\r\n"
+        return "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"
 
     def __str__(self) -> str:
         if self.response == "":

@@ -2,7 +2,7 @@ from pathlib import Path
 import socket
 import os
 import sys
-from .http_utils import HttpRequest, HttpResponse
+from http_utils import HttpRequest, HttpResponse
 import threading
 
 def main(dir = None):
@@ -51,12 +51,20 @@ def process_client(conn:socket.socket, dir = None):
                     local_path += "/"
                 local_path += path_elements[i]
             file = None
+            given_path = None
             if dir:
                 local_path = local_path[1:]
-                file_path = Path(dir + local_path)
-                if file_path.is_file():
-                    file = file_path
+                given_path = Path(dir + local_path)
+                if given_path.is_file():
+                    file = given_path
             try:
+                if http_request.method == "POST":
+                    with open(str(given_path.absolute()), "x") as new_file:
+                        new_file.write(http_request.body)
+                        headers = {}
+                        headers["Content-Length"] = len(http_request.body)
+                        conn.sendall(response.process_post(http_request.body, "application/octet-stream", headers=headers).encode())
+                        return
                 if file:
                     content = file.read_text()
                     conn.sendall(response.process_get(content, "application/octet-stream").encode())
@@ -65,8 +73,8 @@ def process_client(conn:socket.socket, dir = None):
                         print("success")
                         content = file.read()
                         conn.sendall(response.process_get(content, "application/octet-stream").encode())
-            except (FileNotFoundError, IsADirectoryError):
-                print("failed")
+            except (FileNotFoundError, IsADirectoryError, FileExistsError) as err:
+                print("failed", err)
                 conn.sendall(response.not_found().encode())
         case _:
             if path == "/":

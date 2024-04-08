@@ -3,10 +3,11 @@ class HttpRequest:
     path = ""
     protocol = ""
     headers = {}
+    body = ""
 
     def __init__(self, request_data: str) -> None:
         # rq_segments = request_data.split("\n")
-        rq_segments = []
+        rq_segments:list[str] = []
         for request_segment in request_data.split("\n"):
             valid_segment = request_segment.replace("\r", "")
             if len(valid_segment.strip()) == 0:
@@ -22,12 +23,25 @@ class HttpRequest:
                 if s_count >= 2:
                     self.path = segment_parts[1]
                 if s_count >= 3:
-                    self.protocol = segment_parts [2]
+                    self.protocol = segment_parts[2]
                 i = i + 1
+                if self.method == "POST":
+                    i = i + 1
+                continue
+            if i == len(rq_segments):
+                self.body = segment
                 continue
             header, header_data = segment.split(":", 1)
-            self.headers[header.strip().lower()] = header_data.strip()
+            self.headers[header.strip()] = header_data.strip()
             i = i + 1
+
+    def __str__(self) -> str:
+        headers = ""
+        for header, value in self.headers.items():
+            if headers == "":
+                headers += f"{header}: {value}"
+            headers += f"\r\n{header}: {value}"
+        return f"{self.method} {self.path} {self.protocol}\r\n{headers}\r\n\r\n{self.body}"
 
 class HttpResponse:
     response = ""
@@ -39,8 +53,14 @@ class HttpResponse:
         self.response = f"{self.request.protocol} {status} {msg}\r\nContent-Type: {content_type}\r\nContent-Length: {len(content)}\r\n\r\n{content}"
         return self.response
 
-    def process_post(self, content = {}, content_type:str = "application/json",status:int = 201, msg:str = "Created"):
-        self.response = f"{self.request.protocol} {status} {msg}\r\nContent-Type: {content_type}\r\n\r\n{content}"
+    def process_post(self, content = {}, content_type:str = "application/json",status:int = 201, msg:str = "Created", headers:dict={}):
+        extra_h = ""
+        for header, value in headers.items():
+            if extra_h == "":
+                extra_h += f"{header}: {value}"
+                continue
+            extra_h += f"\r\n{header}: {value}"
+        self.response = f"{self.request.protocol} {status} {msg}\r\nContent-Type: {content_type}\r\n{extra_h}\r\n\r\n{content}"
         return self.response
     
     def not_found(self):

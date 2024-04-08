@@ -1,8 +1,7 @@
 from pathlib import Path
 import socket
-import os
 import sys
-from http_utils import HttpRequest, HttpResponse
+from .http_utils import HttpRequest, HttpResponse
 import threading
 
 def main(dir = None):

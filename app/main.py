@@ -37,7 +37,7 @@ def process_client(conn:socket.socket, dir = None):
                     msg += "/"
             conn.sendall(response.process_get(msg).encode())
         case "user-agent":
-            msg = http_request.headers[path_type]
+            msg = http_request.headers["User-Agent"]
             conn.sendall(response.process_get(msg).encode())
         case "files":
             if len(path_elements) <= 2:
